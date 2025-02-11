@@ -8,6 +8,9 @@ export default function HomePage() {
   return (
     <main className={styles.main}>
       <Navigation />
+      <p>
+        This application is used to track Federal Regulations.
+      </p>
     </main>
   );
 }
