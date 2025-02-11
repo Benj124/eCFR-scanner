@@ -1,0 +1,94 @@
+.main {
+    min-height: 100vh;
+    background: linear-gradient(45deg, #b71c1c 0%, #ffffff 50%, #0d47a1 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    color: black;
+  }
+  
+  .header {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Align to flex-start so header content can stack vertically */
+    margin-bottom: 1rem;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+  }
+  
+  .dropdownContainer {
+    display: flex;
+    flex-direction: column; /* Stack dropdowns vertically */
+    align-items: flex-end;  /* Align to the right */
+    gap: 0.5rem;
+  }
+  
+  .dropdownLabel {
+    font-weight: bold;
+    color: black;
+  }
+  
+  .dropdown {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .button {
+    padding: 0.5rem 1rem;
+    background-color: #0d47a1;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .button:hover {
+    background-color: #0b3f91;
+  }
+  
+  .tableContainer {
+    width: 90%;
+    max-width: 1200px;
+    max-height: 60vh;
+    margin-top: 1rem;
+    overflow: auto;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    margin-bottom: 1rem;
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    color: black;
+  }
+  
+  .table thead tr {
+    background-color: #e0e0e0;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ccc;
+  }
+  
+  .childContainer {
+    width: 90%;
+    max-width: 1200px;
+    margin-top: 1rem;
+  }
+  
