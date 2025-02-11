@@ -1,7 +1,5 @@
 .main {
-  /* A simple red, white, and blue themed background */
   min-height: 100vh;
-  /* You can tweak this gradient, or do horizontal stripes, etc. */
   background: linear-gradient(
     45deg,
     #d32f2f 0%,
@@ -18,10 +16,16 @@
 
 .title {
   font-size: 3rem;
-  color: #fff;
+  color: #0033fe;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
   margin-bottom: 2rem;
   font-weight: 700;
+}
+
+.buttonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 1rem;
 }
 
 .navButton {

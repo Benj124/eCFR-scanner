@@ -1,0 +1,135 @@
+.main {
+    min-height: 100vh;
+    /* Patriotic gradient background */
+    background: linear-gradient(45deg, #b71c1c 0%, #ffffff 50%, #0d47a1 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    color: black;
+  }
+  
+  .header {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+  }
+  
+  .searchContainer {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .searchInput {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Container for additional filters */
+  .filtersContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .filterGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    width: 100%;
+  }
+  
+  .filterGroup label {
+    font-weight: bold;
+    color: black;
+  }
+  
+  .filterGroup input {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.95rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Agency selection container */
+  .agencySelection {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .dropdownLabel {
+    font-weight: bold;
+    color: black;
+  }
+  
+  .dropdown {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .button {
+    padding: 0.5rem 1rem;
+    background-color: #0d47a1;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .button:hover {
+    background-color: #0b3f91;
+  }
+  
+  .resultsContainer {
+    width: 100%;
+    max-width: 1200px;
+    overflow: auto;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+  }
+  
+  .dataTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  
+  .dataTable thead th {
+    position: sticky;
+    top: 0;
+    background: #e0e0e0;
+    z-index: 1;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+  }
+  
+  .dataTable th,
+  .dataTable td {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+  }
+  
