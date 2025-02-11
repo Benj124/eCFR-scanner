@@ -4,7 +4,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
-import LineChart from '../components/LineChart'; // Adjust path as needed
+import LineChart from '../components/LineChart';
 import Navigation from '../components/Navigation';
 
 function AgencySearchDashboard() {

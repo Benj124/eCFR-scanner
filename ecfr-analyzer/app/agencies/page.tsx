@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Navigation from '../components/Navigation'; // Adjust the path as needed
+import Navigation from '../components/Navigation'; 
 import styles from './page.module.css';
 
 interface CFRReference {
@@ -22,10 +22,8 @@ export interface Agency {
 export default function AgenciesPage() {
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  // For the header search dropdowns:
   const [selectedAgency, setSelectedAgency] = useState<string>('');
   const [selectedChildAgency, setSelectedChildAgency] = useState<string>('');
-  // New state to toggle display of children in the table
   const [expandedAgency, setExpandedAgency] = useState<string>('');
   const router = useRouter();
 
@@ -48,7 +46,6 @@ export default function AgenciesPage() {
     fetchAgencies();
   }, []);
 
-  // When the parent dropdown changes, clear any child selection.
   const handleParentDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedAgency(e.target.value);
     setSelectedChildAgency('');
@@ -58,25 +55,20 @@ export default function AgenciesPage() {
     setSelectedChildAgency(e.target.value);
   };
 
-  // "Go" button in the header uses the child agency if available, else the parent.
   const handleGoDashboard = () => {
     const agencySlug = selectedChildAgency || selectedAgency;
     router.push(`/agencysearch?agencySlug=${agencySlug}`);
   };
 
-  // Toggle the expanded agency (for "View Children" in the table)
   const toggleExpandedAgency = (agencySlug: string) => {
     setExpandedAgency((prev) => (prev === agencySlug ? '' : agencySlug));
   };
 
-  // Find the selected parent agency (for dropdown child options)
   const parentAgency = agencies.find((a) => a.slug === selectedAgency);
-  // Find the expanded agency object (for displaying children table below)
   const expandedAgencyObj = agencies.find((a) => a.slug === expandedAgency);
 
   return (
     <main className={styles.main}>
-      {/* Navigation appears at the top */}
       <Navigation />
       <header className={styles.header}>
         <h1 className={styles.title}></h1>
@@ -128,7 +120,6 @@ export default function AgenciesPage() {
       {loading && <p>Loading agencies...</p>}
       {!loading && agencies.length === 0 && <p>No agencies found.</p>}
 
-      {/* Main Agencies Table */}
       <div className={styles.tableContainer}>
         <table className={styles.table}>
           <thead>
@@ -176,7 +167,6 @@ export default function AgenciesPage() {
         </table>
       </div>
 
-      {/* Expanded Child Agencies Table */}
       {expandedAgency && expandedAgencyObj && expandedAgencyObj.children && expandedAgencyObj.children.length > 0 && (
         <div className={styles.childContainer}>
           <h2>{expandedAgencyObj.display_name} - Children</h2>
