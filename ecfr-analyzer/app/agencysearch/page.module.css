@@ -1,6 +1,6 @@
 .main {
     min-height: 100vh;
-    background: linear-gradient(45deg, #b71c1c 0%, #ffffff 50%, #0d47a1 100%);
+    background: #ffffff;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -13,18 +13,18 @@
     max-width: 1200px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 1rem;
   }
   
   .title {
-    font-size: 2.5rem;
+    font-size: 1.0rem;
     font-weight: bold;
   }
   
   .dropdownContainer {
     display: flex;
-    flex-direction: column; /* Stack dropdowns vertically */
+    flex-direction: column;
     align-items: flex-end;
     gap: 0.5rem;
   }
@@ -64,7 +64,7 @@
   
   /* Each scrollable area is fixed-height and scrollable */
   .scrollableArea {
-    max-height: 300px; /* adjust as needed */
+    max-height: 300px;
     overflow: auto;
     border: 1px solid #ddd;
     border-radius: 4px;

@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './page.module.css';
+import Navigation from '../components/Navigation';
 
 export default function RegulationSearchPage() {
   // Search term and additional filters
@@ -82,8 +83,9 @@ export default function RegulationSearchPage() {
 
   return (
     <main className={styles.main}>
+        <Navigation />
       <header className={styles.header}>
-        <h1 className={styles.title}>Regulation Search</h1>
+        <h1 className={styles.title}></h1>
       </header>
       {/* Search Filters */}
       <div className={styles.searchContainer}>

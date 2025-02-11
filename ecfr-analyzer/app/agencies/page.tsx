@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Navigation from '../components/Navigation'; // Adjust the path as needed
 import styles from './page.module.css';
 
 interface CFRReference {
@@ -75,8 +76,10 @@ export default function AgenciesPage() {
 
   return (
     <main className={styles.main}>
+      {/* Navigation appears at the top */}
+      <Navigation />
       <header className={styles.header}>
-        <h1 className={styles.title}>Agency List</h1>
+        <h1 className={styles.title}></h1>
         <div className={styles.dropdownContainer}>
           <label htmlFor="agencyDropdown" className={styles.dropdownLabel}>
             Search Agency:

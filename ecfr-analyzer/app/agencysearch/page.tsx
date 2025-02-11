@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import LineChart from '../components/LineChart'; // Adjust path as needed
+import Navigation from '../components/Navigation';
 
-export default function AgencySearchDashboard() {
+function AgencySearchDashboard() {
   const searchParams = useSearchParams();
   const initialAgency = searchParams.get('agencySlug') || '';
   const [selectedAgency, setSelectedAgency] = useState<string>(initialAgency);
@@ -44,7 +45,7 @@ export default function AgencySearchDashboard() {
     async function fetchDashboardData() {
       setLoading(true);
       try {
-        // Use child selection if available, else use parent selection.
+        // Use child selection if available; otherwise, use parent selection.
         const queryAgency = selectedChildAgency || selectedAgency;
         const query = queryAgency ? `?agency_slugs[]=${queryAgency}` : '';
         const endpoints = {
@@ -104,8 +105,9 @@ export default function AgencySearchDashboard() {
 
   return (
     <main className={styles.main}>
+      <Navigation />
       <header className={styles.header}>
-        <h1 className={styles.title}>Agency Search Dashboard</h1>
+        <h1 className={styles.title}>Data below...</h1>
         <div className={styles.dropdownContainer}>
           <label htmlFor="agencyDropdown" className={styles.dropdownLabel}>
             Select Agency:
@@ -194,9 +196,7 @@ export default function AgencySearchDashboard() {
             )}
           </section>
 
-          {/* Other sections remain unchanged... */}
-
-          {/* Search Results Section */}
+          {/* Other sections (Search Results, Count, Summary, Titles, Hierarchy, Suggestions) remain unchanged */}
           <section className={styles.section}>
             <h2>Search Results</h2>
             {resultsData && resultsData.results && resultsData.results.length > 0 ? (
@@ -229,7 +229,6 @@ export default function AgencySearchDashboard() {
             )}
           </section>
 
-          {/* Count Section */}
           <section className={styles.section}>
             <h2>Count</h2>
             {countData && countData.meta ? (
@@ -254,7 +253,6 @@ export default function AgencySearchDashboard() {
             )}
           </section>
 
-          {/* Summary Section */}
           <section className={styles.section}>
             <h2>Summary</h2>
             {summaryData && summaryData.meta ? (
@@ -277,7 +275,6 @@ export default function AgencySearchDashboard() {
             )}
           </section>
 
-          {/* Titles Section */}
           <section className={styles.section}>
             <h2>Titles</h2>
             {titlesData && titlesData.titles ? (
@@ -306,7 +303,6 @@ export default function AgencySearchDashboard() {
             )}
           </section>
 
-          {/* Hierarchy Section */}
           <section className={styles.section}>
             <h2>Hierarchy</h2>
             {hierarchyData && hierarchyData.children ? (
@@ -339,7 +335,6 @@ export default function AgencySearchDashboard() {
             )}
           </section>
 
-          {/* Suggestions Section */}
           <section className={styles.section}>
             <h2>Suggestions</h2>
             {suggestions &&
@@ -368,5 +363,14 @@ export default function AgencySearchDashboard() {
         </div>
       )}
     </main>
+  );
+}
+
+// Wrap the entire page in a Suspense boundary so that useSearchParams is covered.
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Loading Agency Search Dashboard...</p>}>
+      <AgencySearchDashboard />
+    </Suspense>
   );
 }

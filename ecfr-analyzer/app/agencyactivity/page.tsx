@@ -13,6 +13,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import Navigation from '../components/Navigation';
 
 // Register the necessary Chart.js modules
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -108,9 +109,10 @@ export default function AgencyActivityPage() {
 
   return (
     <main className={styles.main}>
-      <h1 className={styles.title}>Agency Activity</h1>
+      <Navigation />
+      <h1 className={styles.title}></h1>
       {loading ? (
-        <p>Loading agency activity data, this may take 1 minute.</p>
+        <p>Loading agency activity data, this may take a minute, do not navigate away</p>
       ) : (
         <>
           <div className={styles.chartContainer}>
