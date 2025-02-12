@@ -29,7 +29,9 @@ interface LineChartProps {
 
 const LineChart: React.FC<LineChartProps> = ({ data }) => {
   // Sort the dates so the chart is in order
-  const sortedDates = Object.keys(data).sort();
+  const sortedDates = Object.keys(data).sort(
+    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+  );
   const counts = sortedDates.map((date) => data[date]);
 
   const chartData = {

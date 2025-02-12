@@ -24,6 +24,10 @@ function AgencySearchDashboard() {
   const [hierarchyData, setHierarchyData] = useState<any>(null);
   const [suggestions, setSuggestions] = useState<any>(null);
 
+  // New state for date range selection
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+
   // Fetch agency list for the dropdown
   useEffect(() => {
     async function fetchAgencies() {
@@ -91,6 +95,19 @@ function AgencySearchDashboard() {
     fetchDashboardData();
   }, [selectedAgency, selectedChildAgency]);
 
+  // Set default startDate and endDate based on fetched dailyCounts data
+  useEffect(() => {
+    if (dailyCounts && dailyCounts.dates) {
+      const sortedDates = Object.keys(dailyCounts.dates).sort(
+        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+      );
+      if (sortedDates.length > 0) {
+        if (!startDate) setStartDate(sortedDates[0]);
+        if (!endDate) setEndDate(sortedDates[sortedDates.length - 1]);
+      }
+    }
+  }, [dailyCounts, endDate, startDate]);
+
   const handleParentDropdownChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedAgency(e.target.value);
     setSelectedChildAgency('');
@@ -100,8 +117,42 @@ function AgencySearchDashboard() {
     setSelectedChildAgency(e.target.value);
   };
 
+  // Handlers for date range input changes
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartDate(e.target.value);
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEndDate(e.target.value);
+  };
+
+  // Filter the dailyCounts data based on selected date range
+  const getFilteredDatesData = () => {
+    if (!dailyCounts || !dailyCounts.dates) return {};
+    const filtered = Object.keys(dailyCounts.dates)
+      .filter(date => {
+        if (startDate && new Date(date) < new Date(startDate)) return false;
+        if (endDate && new Date(date) > new Date(endDate)) return false;
+        return true;
+      })
+      .reduce((acc: Record<string, number>, date) => {
+        acc[date] = dailyCounts.dates[date];
+        return acc;
+      }, {});
+    return filtered;
+  };
+
   // Get the selected parent agency object
   const parentAgency = agencyList.find((a) => a.slug === selectedAgency);
+
+  const filteredDailyData = getFilteredDatesData();
+  const sortedFilteredDates = Object.keys(filteredDailyData).sort(
+    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+  );
+  const totalFilteredCount = sortedFilteredDates.reduce(
+    (sum, date) => sum + Number(filteredDailyData[date]),
+    0
+  );
 
   return (
     <main className={styles.main}>
@@ -153,44 +204,62 @@ function AgencySearchDashboard() {
       {loading && <p>Loading dashboard data...</p>}
       {!loading && (
         <div className={styles.dashboardContent}>
-          {/* Daily Counts Section with Line Chart */}
+          {/* Daily Counts Section with Date Range Filtering */}
           <section className={styles.section}>
             <h2>Daily Counts</h2>
+            {/* Date Range Controls */}
+            {dailyCounts && dailyCounts.dates && (
+              <div className={styles.dateRangeContainer}>
+                <div className={styles.dateInputContainer}>
+                  <label htmlFor="startDate" className={styles.dateLabel}>Start Date:</label>
+                  <input
+                    type="date"
+                    id="startDate"
+                    value={startDate}
+                    min={Object.keys(dailyCounts.dates).sort()[0]}
+                    max={endDate || Object.keys(dailyCounts.dates).sort().pop()}
+                    onChange={handleStartDateChange}
+                    className={styles.dateInput}
+                  />
+                </div>
+                <div className={styles.dateInputContainer}>
+                  <label htmlFor="endDate" className={styles.dateLabel}>End Date:</label>
+                  <input
+                    type="date"
+                    id="endDate"
+                    value={endDate}
+                    min={startDate || Object.keys(dailyCounts.dates).sort()[0]}
+                    max={Object.keys(dailyCounts.dates).sort().pop()}
+                    onChange={handleEndDateChange}
+                    className={styles.dateInput}
+                  />
+                </div>
+              </div>
+            )}
             {dailyCounts && dailyCounts.dates ? (
-              (() => {
-                const sortedDates = Object.keys(dailyCounts.dates).sort(
-                  (a, b) => new Date(a).getTime() - new Date(b).getTime()
-                );
-                const totalCount = sortedDates.reduce(
-                  (sum, date) => sum + Number(dailyCounts.dates[date]),
-                  0
-                );
-                return (
-                  <>
-                    <div className={styles.chartContainer}>
-                      <LineChart data={dailyCounts.dates} />
-                    </div>
-                    <div className={styles.scrollableArea}>
-                      <table className={styles.dataTable}>
-                        <thead>
-                          <tr>
-                            <th>Date</th>
-                            <th>Count ({totalCount})</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {sortedDates.map((date) => (
-                            <tr key={date}>
-                              <td>{date}</td>
-                              <td>{dailyCounts.dates[date]}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                );
-              })()
+              <>
+                <div className={styles.chartContainer}>
+                  <LineChart data={filteredDailyData} />
+                </div>
+                <div className={styles.scrollableArea}>
+                  <table className={styles.dataTable}>
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Count ({totalFilteredCount})</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedFilteredDates.map((date) => (
+                        <tr key={date}>
+                          <td>{date}</td>
+                          <td>{filteredDailyData[date]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             ) : (
               <p>No daily counts data.</p>
             )}
