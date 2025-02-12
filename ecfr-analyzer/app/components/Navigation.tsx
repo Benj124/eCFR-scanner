@@ -38,7 +38,10 @@ export default function Navigation() {
             Regulation Search
           </li>
           <li className={styles.navItem} onClick={() => handleNavigation('/agencyactivity')}>
-            Agency 12 Month Activity
+            Agency Activity
+          </li>
+          <li className={styles.navItem} onClick={() => handleNavigation('/titles')}>
+            Titles and Versions
           </li>
         </ul>
       </nav>

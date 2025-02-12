@@ -15,10 +15,8 @@ import {
 } from 'chart.js';
 import Navigation from '../components/Navigation';
 
-// Register the necessary Chart.js modules
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-// Define types for our agency data
 interface Agency {
   slug: string;
   display_name: string;
@@ -34,8 +32,14 @@ export default function AgencyActivityPage() {
   const [agencyCounts, setAgencyCounts] = useState<AgencyCount[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // monthsRange is bound to the dropdown; queryMonths is set when "Run Query" is clicked.
+  const [monthsRange, setMonthsRange] = useState<number>(6);
+  const [queryMonths, setQueryMonths] = useState<number>(6);
+
+  // Fetch agency activity when the component mounts or queryMonths changes.
   useEffect(() => {
     async function fetchAgencyActivity() {
+      setLoading(true);
       try {
         // 1. Fetch the list of agencies
         const agenciesRes = await fetch('/api/regulatoryAgencies/get');
@@ -45,18 +49,18 @@ export default function AgencyActivityPage() {
         }
         const agencies: Agency[] = agenciesJson.data.agencies || [];
 
-        // 2. Compute the date 12 months ago (formatted as YYYY-MM-DD)
-        const twelveMonthsAgo = new Date();
-        twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
-        const formattedDate = twelveMonthsAgo.toISOString().split('T')[0];
+        // 2. Compute the date "queryMonths" ago (formatted as YYYY-MM-DD)
+        const startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - queryMonths);
+        const formattedDate = startDate.toISOString().split('T')[0];
 
-        // 3. For each agency, call the count endpoint with the filter last_modified_after
+        // 3. For each agency, call the count endpoint with filter last_modified_after
         const countPromises = agencies.map(async (agency) => {
           const countRes = await fetch(
             `/api/search/count?agency_slugs[]=${agency.slug}&last_modified_after=${formattedDate}`
           );
           const countJson = await countRes.json();
-          // Assume the count JSON has structure: { success: true, data: { meta: { total_count: number } } }
+          // Assume count JSON has structure: { success: true, data: { meta: { total_count: number } } }
           const count =
             countJson.success && countJson.data?.meta?.total_count
               ? Number(countJson.data.meta.total_count)
@@ -79,15 +83,15 @@ export default function AgencyActivityPage() {
       }
     }
     fetchAgencyActivity();
-  }, []);
+  }, [queryMonths]);
 
-  // Prepare data for the Bar chart
+  // Prepare data for the Bar chart using queryMonths in the labels.
   const labels = agencyCounts.map((ac) => ac.agencyName);
   const chartData = {
     labels,
     datasets: [
       {
-        label: 'Regulations Passed (Last 12 Months)',
+        label: `Regulations Passed (Last ${queryMonths} Months)`,
         data: agencyCounts.map((ac) => ac.count),
         backgroundColor: 'rgba(13, 71, 161, 0.6)',
         borderColor: 'rgba(13, 71, 161, 1)',
@@ -102,17 +106,45 @@ export default function AgencyActivityPage() {
       legend: { position: 'top' as const },
       title: {
         display: true,
-        text: 'Top 20 Agencies - Regulations Passed in Last 12 Months',
+        text: `Top 20 Agencies - Regulations Passed in Last ${queryMonths} Months`,
       },
     },
+  };
+
+  // Run Query button handler: update queryMonths so the effect triggers
+  const handleRunQuery = () => {
+    setQueryMonths(monthsRange);
   };
 
   return (
     <main className={styles.main}>
       <Navigation />
       <h1 className={styles.title}></h1>
+      <div className={styles.filterContainer}>
+        <label htmlFor="monthsRange" className={styles.filterLabel}>
+          Select Months Range:
+        </label>
+        <select
+          id="monthsRange"
+          value={monthsRange}
+          onChange={(e) => setMonthsRange(Number(e.target.value))}
+          className={styles.filterDropdown}
+        >
+          {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => (
+            <option key={num} value={num}>
+              {num}
+            </option>
+          ))}
+        </select>
+        <button className={styles.button} onClick={handleRunQuery}>
+          Run Query
+        </button>
+      </div>
       {loading ? (
-        <p>Loading agency activity data, this may take a minute, do not navigate away</p>
+        <p>
+          Loading agency activity data, this may take a minute, do not navigate
+          away.
+        </p>
       ) : (
         <>
           <div className={styles.chartContainer}>
