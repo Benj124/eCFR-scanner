@@ -4,15 +4,73 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;  /* Changed from center to flex-start */
   padding: 2rem;
-  color: black;
+  color: #333;
 }
 
 .title {
-  font-size: 3rem;
-  color: #0033fe;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
-  margin-top: 1rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* Metrics Section Styling */
+.metricsSection {
+  width: 100%;
+  max-width: 1200px;
+  background: #fff;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metricsSection h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Button group for 30/60/90 day selection */
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.metricButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #0d47a1;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #0d47a1;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.metricButton:hover {
+  background-color: #0d47a1;
+  color: #fff;
+}
+
+.activeButton {
+  background-color: #0d47a1;
+  color: #fff;
+}
+
+/* Table styling for metrics */
+.metricTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.metricTable th,
+.metricTable td {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+}
+
+.metricTable thead th {
+  background: #f2f2f2;
 }

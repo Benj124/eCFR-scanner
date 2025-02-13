@@ -32,7 +32,7 @@ export default function Navigation() {
             Agency List
           </li>
           <li className={styles.navItem} onClick={() => handleNavigation('/agencysearch')}>
-            Agency Search
+            Agency/Count Search
           </li>
           <li className={styles.navItem} onClick={() => handleNavigation('/regulationsearch')}>
             Regulation Search
