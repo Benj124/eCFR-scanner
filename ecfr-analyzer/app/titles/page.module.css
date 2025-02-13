@@ -88,7 +88,6 @@
   padding: 1rem;
 }
 
-/* Styles for the XML viewer */
 .xmlContainer {
   font-family: sans-serif;
   line-height: 1.5;
@@ -100,4 +99,26 @@
 
 .xmlNode {
   margin-left: 1rem;
+}
+
+/* Styles for the StructureViewer */
+.structureNode {
+  margin-left: 1.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-left: 2px solid #ccc;
+}
+
+.structureHeader {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.structureMeta p {
+  margin: 0.25rem 0;
+}
+
+.structureChildren {
+  margin-top: 0.5rem;
 }
