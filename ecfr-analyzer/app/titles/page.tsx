@@ -189,7 +189,7 @@ export default function TitlesPage() {
   return (
     <main className={styles.main}>
       <Navigation />
-      <h1 className={styles.title}>Titles</h1>
+      <h1 className={styles.title}></h1>
       {loading ? (
         <p>Loading titles...</p>
       ) : (
