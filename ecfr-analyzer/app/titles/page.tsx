@@ -27,12 +27,56 @@ interface TitleVersion {
   type: string;
 }
 
+interface XmlState {
+  xml: string;
+  loading: boolean;
+  expanded: boolean;
+}
+
+/**
+ * Helper function to recursively render XML nodes.
+ * This function ignores the raw tags and outputs nested content.
+ */
+function renderXMLNode(node: ChildNode): React.ReactNode {
+  if (node.nodeType === Node.TEXT_NODE) {
+    // Trim whitespace-only text nodes
+    const trimmed = node.textContent?.trim();
+    return trimmed ? trimmed : null;
+  }
+  if (node.nodeType === Node.ELEMENT_NODE) {
+    const element = node as Element;
+    return (
+      <div className={`xml-${element.tagName.toLowerCase()}`}>
+        {Array.from(node.childNodes).map((child, i) => (
+          <div key={i} className={styles.xmlNode}>
+            {renderXMLNode(child)}
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
+/**
+ * XMLViewer component uses DOMParser to convert the XML string
+ * into a DOM and then renders it as JSX.
+ */
+function XMLViewer({ xmlString }: { xmlString: string }) {
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+  const root = xmlDoc.documentElement;
+  return <div className={styles.xmlContainer}>{renderXMLNode(root)}</div>;
+}
+
 export default function TitlesPage() {
   const [titles, setTitles] = useState<TitleSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [expandedTitle, setExpandedTitle] = useState<number | null>(null);
   const [versionData, setVersionData] = useState<TitleVersion[] | null>(null);
   const [versionLoading, setVersionLoading] = useState<boolean>(false);
+  // New state to track XML expansion per version row
+  const [expandedXml, setExpandedXml] = useState<{ [key: string]: XmlState }>({});
 
   // Fetch the titles summary data on mount
   useEffect(() => {
@@ -41,7 +85,6 @@ export default function TitlesPage() {
         const res = await fetch('/api/titles');
         const json = await res.json();
         if (json.success && json.data.titles) {
-          // Assume the response has { "titles": [ ... ], "meta": { ... } }
           setTitles(json.data.titles);
         } else {
           console.error('Error fetching titles:', json.error);
@@ -55,7 +98,7 @@ export default function TitlesPage() {
     fetchTitles();
   }, []);
 
-  // Toggle expansion for a given title number
+  // Toggle expansion for a given title number (to show its version data)
   const toggleExpansion = async (titleNumber: number) => {
     if (expandedTitle === titleNumber) {
       setExpandedTitle(null);
@@ -81,10 +124,72 @@ export default function TitlesPage() {
     }
   };
 
+  // Toggle XML expansion for a given version.
+  // versionKey uniquely identifies a version row (e.g. identifier-index)
+  const toggleXml = async (
+    versionKey: string,
+    date: string,
+    title: string,
+    section: string
+  ) => {
+    // Toggle expansion state first
+    setExpandedXml((prev) => {
+      const current = prev[versionKey];
+      if (current && current.expanded) {
+        // Collapse if already expanded
+        return { ...prev, [versionKey]: { ...current, expanded: false } };
+      } else {
+        // Expand; if not already loaded, mark as loading
+        return {
+          ...prev,
+          [versionKey]: { xml: '', loading: true, expanded: true },
+        };
+      }
+    });
+
+    // If already expanded and XML exists, do nothing further
+    if (expandedXml[versionKey] && expandedXml[versionKey].xml) {
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/titles/section?date=${encodeURIComponent(
+          date
+        )}&title=${encodeURIComponent(title)}&section=${encodeURIComponent(
+          section
+        )}`
+      );
+      if (!res.ok) {
+        const errorText = `Error loading XML: ${res.status}`;
+        setExpandedXml((prev) => ({
+          ...prev,
+          [versionKey]: { xml: errorText, loading: false, expanded: true },
+        }));
+      } else {
+        const xmlText = await res.text();
+        setExpandedXml((prev) => ({
+          ...prev,
+          [versionKey]: { xml: xmlText, loading: false, expanded: true },
+        }));
+      }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      setExpandedXml((prev) => ({
+        ...prev,
+        [versionKey]: {
+          xml: 'Error loading XML',
+          loading: false,
+          expanded: true,
+        },
+      }));
+    }
+  };
+
   return (
     <main className={styles.main}>
       <Navigation />
-      <h1 className={styles.title}></h1>
+      <h1 className={styles.title}>Titles</h1>
       {loading ? (
         <p>Loading titles...</p>
       ) : (
@@ -135,19 +240,52 @@ export default function TitlesPage() {
                                 <th>Type</th>
                                 <th>Date</th>
                                 <th>Issue Date</th>
+                                <th>XML</th>
                               </tr>
                             </thead>
                             <tbody>
-                            {versionData.map((version, index) => (
-                                <tr key={`${version.identifier}-${index}`}>
-                                <td>{version.identifier}</td>
-                                <td>{version.name}</td>
-                                <td>{version.part}</td>
-                                <td>{version.type}</td>
-                                <td>{version.date}</td>
-                                <td>{version.issue_date}</td>
-                                </tr>
-                            ))}
+                              {versionData.map((version, index) => {
+                                const versionKey = `${version.identifier}-${index}`;
+                                const xmlState = expandedXml[versionKey];
+                                return (
+                                  <React.Fragment key={versionKey}>
+                                    <tr>
+                                      <td>{version.identifier}</td>
+                                      <td>{version.name}</td>
+                                      <td>{version.part}</td>
+                                      <td>{version.type}</td>
+                                      <td>{version.date}</td>
+                                      <td>{version.issue_date}</td>
+                                      <td>
+                                        <button
+                                          className={styles.expandButton}
+                                          onClick={() =>
+                                            toggleXml(
+                                              versionKey,
+                                              version.date,
+                                              version.title,
+                                              version.identifier
+                                            )
+                                          }
+                                        >
+                                          {xmlState && xmlState.expanded ? '-' : '+'}
+                                        </button>
+                                      </td>
+                                    </tr>
+                                    {xmlState && xmlState.expanded && (
+                                      <tr>
+                                        <td colSpan={7} className={styles.xmlRow}>
+                                          {xmlState.loading ? (
+                                            <p>Loading XML...</p>
+                                          ) : (
+                                            <XMLViewer xmlString={xmlState.xml} />
+                                          )}
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </React.Fragment>
+                                );
+                              })}
                             </tbody>
                           </table>
                         ) : (
