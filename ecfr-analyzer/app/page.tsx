@@ -16,7 +16,6 @@ interface AgencyCount {
   count: number;
 }
 
-/** Basic shape of each title returned from /api/titles */
 interface TitleSummary {
   number: number;
   name: string;
@@ -26,11 +25,10 @@ interface TitleSummary {
   reserved: boolean;
 }
 
-/** We’ll display a short set of fields */
 interface TitleLatest {
   identifier: string;
   name: string;
-  date: string; // e.g. '2024-01-05' or 'N/A'
+  date: string;
 }
 
 interface DailyCountsData {
@@ -48,12 +46,16 @@ export default function HomePage() {
   const [titlesLoading, setTitlesLoading] = useState<boolean>(false);
 
   // Daily counts states
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dailyCounts, setDailyCounts] = useState<DailyCountsData | null>(null);
   const [dailyAvg, setDailyAvg] = useState<number | null>(null);
   const [dailyLoading, setDailyLoading] = useState<boolean>(false);
 
-  // Fetch top agencies metric based on selectedDays (30/60/90)
+  // Outlier exclusion toggle
+  const [excludeOutliers, setExcludeOutliers] = useState<boolean>(false);
+
+  // ---------------------------
+  //   FETCH TOP AGENCIES
+  // ---------------------------
   useEffect(() => {
     async function fetchTopAgencies() {
       setAgenciesLoading(true);
@@ -102,7 +104,9 @@ export default function HomePage() {
     fetchTopAgencies();
   }, [selectedDays]);
 
-  // Fetch the latest Titles/Versions (most recent 5 from "today" back)
+  // ---------------------------
+  //   FETCH LATEST TITLES
+  // ---------------------------
   useEffect(() => {
     async function fetchLatestTitles() {
       setTitlesLoading(true);
@@ -112,22 +116,19 @@ export default function HomePage() {
         const json = await res.json();
 
         if (json.success && json.data?.titles) {
-          // `titles` is an array of TitleSummary
           const summaries: TitleSummary[] = json.data.titles;
-
-          // We'll define a helper to get the latest date from each summary
           const now = new Date();
+
           const validTitles = summaries
             .map((t) => {
-              // Determine which date is more recent
               const issueDate = t.latest_issue_date ? new Date(t.latest_issue_date) : null;
               const amendDate = t.latest_amended_on ? new Date(t.latest_amended_on) : null;
-              // Find the more recent of the two (if both exist)
+              // whichever is more recent
               let effectiveDate: Date | null = null;
               if (issueDate && amendDate) {
                 effectiveDate = issueDate > amendDate ? issueDate : amendDate;
               } else {
-                effectiveDate = issueDate || amendDate; // whichever is non-null
+                effectiveDate = issueDate || amendDate;
               }
 
               return {
@@ -135,19 +136,18 @@ export default function HomePage() {
                 effectiveDate,
               };
             })
-            .filter((obj) => {
-              // Keep only titles with a valid date that is <= now
-              return obj.effectiveDate && obj.effectiveDate <= now;
-            });
+            // Keep only titles with a valid date <= now
+            .filter((obj) => obj.effectiveDate && obj.effectiveDate <= now);
 
-          // Sort them by effectiveDate desc
-          validTitles.sort((a, b) => (b.effectiveDate as Date).getTime() - (a.effectiveDate as Date).getTime());
+          // Sort them desc by date
+          validTitles.sort(
+            (a, b) => (b.effectiveDate as Date).getTime() - (a.effectiveDate as Date).getTime()
+          );
 
-          // Take the top 5
-          const mostRecent5 = validTitles.slice(0, 10);
+          // Take top 10, or top 5, etc. (Adjust as needed)
+          const mostRecent = validTitles.slice(0, 10);
 
-          // Map to your TitleLatest shape
-          const mapped: TitleLatest[] = mostRecent5.map((obj) => {
+          const mapped: TitleLatest[] = mostRecent.map((obj) => {
             const t = obj.title;
             const dateStr = obj.effectiveDate
               ? obj.effectiveDate.toISOString().split('T')[0]
@@ -173,7 +173,9 @@ export default function HomePage() {
     fetchLatestTitles();
   }, []);
 
-  // Fetch daily counts and compute average
+  // ---------------------------
+  //   FETCH DAILY COUNTS
+  // ---------------------------
   useEffect(() => {
     async function fetchDailyCounts() {
       setDailyLoading(true);
@@ -186,11 +188,6 @@ export default function HomePage() {
         };
         if (json.success && json.data && json.data.dates) {
           setDailyCounts(json.data);
-          const counts = Object.values(json.data.dates) as number[];
-          if (counts.length > 0) {
-            const sum = counts.reduce((a, b) => a + b, 0);
-            setDailyAvg(sum / counts.length);
-          }
         } else {
           console.error('Error fetching daily counts:', json.error);
         }
@@ -202,6 +199,49 @@ export default function HomePage() {
     }
     fetchDailyCounts();
   }, []);
+
+  // ---------------------------
+  //   RECALCULATE AVERAGE
+  // ---------------------------
+  useEffect(() => {
+    if (!dailyCounts) {
+      setDailyAvg(null);
+      return;
+    }
+
+    const counts = Object.values(dailyCounts.dates) as number[];
+    if (!counts.length) {
+      setDailyAvg(null);
+      return;
+    }
+
+    // If "excludeOutliers" is unchecked, simple average
+    if (!excludeOutliers) {
+      const sum = counts.reduce((a, b) => a + b, 0);
+      setDailyAvg(sum / counts.length);
+      return;
+    }
+
+    // Otherwise, compute mean, filter out points outside ±1 std dev
+    const mean = counts.reduce((a, b) => a + b, 0) / counts.length;
+    const variance =
+      counts.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / counts.length;
+    const stdDev = Math.sqrt(variance);
+
+    // Keep data points within mean ± 1 std dev
+    const lower = mean - stdDev;
+    const upper = mean + stdDev;
+    const filtered = counts.filter((val) => val >= lower && val <= upper);
+
+    if (filtered.length === 0) {
+      // If everything was outliered out, no average
+      setDailyAvg(null);
+      return;
+    }
+
+    const filteredSum = filtered.reduce((a, b) => a + b, 0);
+    setDailyAvg(filteredSum / filtered.length);
+  }, [dailyCounts, excludeOutliers]);
 
   return (
     <main className={styles.main}>
@@ -276,6 +316,17 @@ export default function HomePage() {
       {/* Daily Count Average Section */}
       <section className={styles.metricsSection}>
         <h2>Daily Count Average</h2>
+        {/* Checkbox for excluding outliers */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={excludeOutliers}
+              onChange={(e) => setExcludeOutliers(e.target.checked)}
+            />{' '}
+            Exclude outliers (±1 std dev)
+          </label>
+        </div>
         {dailyLoading ? (
           <p>Loading daily counts...</p>
         ) : dailyAvg !== null ? (
