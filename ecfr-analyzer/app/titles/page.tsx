@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
@@ -39,7 +40,7 @@ interface XmlState {
 
 //
 // New interface for the structure data returned by /api/structure
-// (You can adjust as needed if your real data differs)
+// (Adjust as needed if your data differs.)
 //
 interface StructureNode {
   identifier: string;
@@ -90,7 +91,6 @@ function StructureViewer({ node }: { node: StructureNode }) {
 
 //
 // Helper function to recursively render XML nodes
-// (unchanged from your original code)
 //
 function renderXMLNode(node: ChildNode): React.ReactNode {
   if (node.nodeType === Node.TEXT_NODE) {
@@ -114,7 +114,6 @@ function renderXMLNode(node: ChildNode): React.ReactNode {
 
 //
 // XMLViewer to display the fetched XML as JSX
-// (unchanged from your original code)
 //
 function XMLViewer({ xmlString }: { xmlString: string }) {
   const parser = new DOMParser();
@@ -139,8 +138,15 @@ export default function TitlesPage() {
   // State to expand/collapse structure metadata
   const [expandedStructure, setExpandedStructure] = useState<{ [key: number]: boolean }>({});
   // Keep the structure response data, keyed by title.number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [structureData, setStructureData] = useState<{ [key: number]: any }>({});
+
+  // State for ancestry expansions inside the version table
+  interface AncestryState {
+    data: any;
+    loading: boolean;
+    expanded: boolean;
+  }
+  const [expandedAncestry, setExpandedAncestry] = useState<{ [key: string]: AncestryState }>({});
 
   //
   // Fetch the titles summary data on mount
@@ -285,6 +291,66 @@ export default function TitlesPage() {
   };
 
   //
+  // Toggle expansion for Ancestry (within the Version details table)
+  //
+  const toggleAncestry = async (
+    versionKey: string,
+    date: string,
+    title: string,
+    section: string
+  ) => {
+    setExpandedAncestry((prev) => {
+      const current = prev[versionKey];
+      if (current && current.expanded) {
+        // Collapse if expanded
+        return { ...prev, [versionKey]: { ...current, expanded: false } };
+      } else {
+        // Expand, mark loading if no data yet
+        return {
+          ...prev,
+          [versionKey]: { data: null, loading: true, expanded: true },
+        };
+      }
+    });
+
+    // If we already have data and are re-expanding, don't refetch
+    if (expandedAncestry[versionKey]?.data) {
+      return;
+    }
+
+    // Fetch from /api/ancestry
+    try {
+      const res = await fetch(
+        `/api/ancestry?date=${encodeURIComponent(date)}&title=${encodeURIComponent(
+          title
+        )}&section=${encodeURIComponent(section)}`
+      );
+      if (!res.ok) {
+        const errorText = `Error loading ancestry data: ${res.status}`;
+        setExpandedAncestry((prev) => ({
+          ...prev,
+          [versionKey]: { data: errorText, loading: false, expanded: true },
+        }));
+      } else {
+        const ancestryJson = await res.json();
+        setExpandedAncestry((prev) => ({
+          ...prev,
+          [versionKey]: { data: ancestryJson, loading: false, expanded: true },
+        }));
+      }
+    } catch (error) {
+      setExpandedAncestry((prev) => ({
+        ...prev,
+        [versionKey]: {
+          data: 'Error loading ancestry',
+          loading: false,
+          expanded: true,
+        },
+      }));
+    }
+  };
+
+  //
   // Render the UI
   //
   return (
@@ -379,12 +445,14 @@ export default function TitlesPage() {
                                   <th>Date</th>
                                   <th>Issue Date</th>
                                   <th>XML</th>
+                                  <th>Ancestry</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {versionData.map((version, index) => {
                                   const versionKey = `${version.identifier}-${index}`;
                                   const xmlState = expandedXml[versionKey];
+                                  const ancestryState = expandedAncestry[versionKey];
 
                                   return (
                                     <React.Fragment key={versionKey}>
@@ -410,14 +478,52 @@ export default function TitlesPage() {
                                             {xmlState && xmlState.expanded ? '-' : '+'}
                                           </button>
                                         </td>
+                                        {/* New "Ancestry" column button */}
+                                        <td>
+                                          <button
+                                            className={styles.expandButton}
+                                            onClick={() =>
+                                              toggleAncestry(
+                                                versionKey,
+                                                version.date,
+                                                version.title,
+                                                version.identifier
+                                              )
+                                            }
+                                          >
+                                            {ancestryState && ancestryState.expanded ? '-' : '+'}
+                                          </button>
+                                        </td>
                                       </tr>
+
+                                      {/* Expanded row for XML */}
                                       {xmlState && xmlState.expanded && (
                                         <tr>
-                                          <td colSpan={7} className={styles.xmlRow}>
+                                          <td colSpan={8} className={styles.xmlRow}>
                                             {xmlState.loading ? (
                                               <p>Loading XML...</p>
                                             ) : (
                                               <XMLViewer xmlString={xmlState.xml} />
+                                            )}
+                                          </td>
+                                        </tr>
+                                      )}
+
+                                      {/* Expanded row for Ancestry */}
+                                      {ancestryState && ancestryState.expanded && (
+                                        <tr>
+                                          <td colSpan={8} className={styles.xmlRow}>
+                                            {ancestryState.loading ? (
+                                              <p>Loading ancestry data...</p>
+                                            ) : typeof ancestryState.data === 'string' ? (
+                                              // Possibly an error string
+                                              <p>{ancestryState.data}</p>
+                                            ) : ancestryState.data?.success ? (
+                                              <pre>
+                                                {JSON.stringify(ancestryState.data, null, 2)}
+                                              </pre>
+                                            ) : (
+                                              <p>Error or no data found.</p>
                                             )}
                                           </td>
                                         </tr>
