@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import styles from './page.module.css';
-import Navigation from '../components/Navigation';
+import React, { useEffect, useState } from "react";
+import styles from "./page.module.css";
+import Navigation from "../components/Navigation";
+import SummaryBot from "../components/SummaryBot";
 
-//
-// Existing interfaces for Titles and Versions
-//
 interface TitleSummary {
   number: number;
   name: string;
@@ -38,10 +36,6 @@ interface XmlState {
   expanded: boolean;
 }
 
-//
-// New interface for the structure data returned by /api/structure
-// (Adjust as needed if your data differs.)
-//
 interface StructureNode {
   identifier: string;
   label: string;
@@ -51,32 +45,23 @@ interface StructureNode {
   size: number;
   reserved: boolean;
   children?: StructureNode[];
-  // Add any other fields you wish to display...
 }
 
-//
-// Recursive component to display a single node and its children.
-// This transforms nested JSON into a visually structured layout.
-//
 function StructureViewer({ node }: { node: StructureNode }) {
   return (
     <div className={styles.structureNode}>
       <div className={styles.structureHeader}>
         {node.label_level} {node.label_description}
+        <SummaryBot
+          title={`${node.label_level} ${node.label_description}`}
+          identifier={node.identifier}
+        />
       </div>
       <div className={styles.structureMeta}>
-        <p>
-          <strong>Identifier:</strong> {node.identifier}
-        </p>
-        <p>
-          <strong>Type:</strong> {node.type}
-        </p>
-        <p>
-          <strong>Reserved:</strong> {node.reserved ? 'Yes' : 'No'}
-        </p>
-        <p>
-          <strong>Size:</strong> {node.size}
-        </p>
+        <p><strong>Identifier:</strong> {node.identifier}</p>
+        <p><strong>Type:</strong> {node.type}</p>
+        <p><strong>Reserved:</strong> {node.reserved ? "Yes" : "No"}</p>
+        <p><strong>Size:</strong> {node.size}</p>
       </div>
       {node.children && node.children.length > 0 && (
         <div className={styles.structureChildren}>
@@ -89,9 +74,6 @@ function StructureViewer({ node }: { node: StructureNode }) {
   );
 }
 
-//
-// Helper function to recursively render XML nodes
-//
 function renderXMLNode(node: ChildNode): React.ReactNode {
   if (node.nodeType === Node.TEXT_NODE) {
     const trimmed = node.textContent?.trim();
@@ -112,35 +94,23 @@ function renderXMLNode(node: ChildNode): React.ReactNode {
   return null;
 }
 
-//
-// XMLViewer to display the fetched XML as JSX
-//
 function XMLViewer({ xmlString }: { xmlString: string }) {
   const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+  const xmlDoc = parser.parseFromString(xmlString, "application/xml");
   const root = xmlDoc.documentElement;
   return <div className={styles.xmlContainer}>{renderXMLNode(root)}</div>;
 }
 
 export default function TitlesPage() {
-  // Existing state for Titles
   const [titles, setTitles] = useState<TitleSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
-  // State for expanded Title Versions
   const [expandedTitle, setExpandedTitle] = useState<number | null>(null);
   const [versionData, setVersionData] = useState<TitleVersion[] | null>(null);
   const [versionLoading, setVersionLoading] = useState<boolean>(false);
-
-  // State for XML expansions
   const [expandedXml, setExpandedXml] = useState<{ [key: string]: XmlState }>({});
-
-  // State to expand/collapse structure metadata
   const [expandedStructure, setExpandedStructure] = useState<{ [key: number]: boolean }>({});
-  // Keep the structure response data, keyed by title.number
   const [structureData, setStructureData] = useState<{ [key: number]: any }>({});
 
-  // State for ancestry expansions inside the version table
   interface AncestryState {
     data: any;
     loading: boolean;
@@ -148,21 +118,18 @@ export default function TitlesPage() {
   }
   const [expandedAncestry, setExpandedAncestry] = useState<{ [key: string]: AncestryState }>({});
 
-  //
-  // Fetch the titles summary data on mount
-  //
   useEffect(() => {
     async function fetchTitles() {
       try {
-        const res = await fetch('/api/titles');
+        const res = await fetch("/api/titles");
         const json = await res.json();
         if (json.success && json.data.titles) {
           setTitles(json.data.titles);
         } else {
-          console.error('Error fetching titles:', json.error);
+          console.error("Error fetching titles:", json.error);
         }
       } catch (error) {
-        console.error('Error fetching titles:', error);
+        console.error("Error fetching titles:", error);
       } finally {
         setLoading(false);
       }
@@ -170,16 +137,11 @@ export default function TitlesPage() {
     fetchTitles();
   }, []);
 
-  //
-  // Toggle expansion for a given title's version data
-  //
   const toggleExpansion = async (titleNumber: number) => {
     if (expandedTitle === titleNumber) {
-      // Collapse if already expanded
       setExpandedTitle(null);
       setVersionData(null);
     } else {
-      // Expand
       setExpandedTitle(titleNumber);
       setVersionLoading(true);
       try {
@@ -188,11 +150,11 @@ export default function TitlesPage() {
         if (json.success && json.data.content_versions) {
           setVersionData(json.data.content_versions);
         } else {
-          console.error('Error fetching title versions:', json.error);
+          console.error("Error fetching title versions:", json.error);
           setVersionData(null);
         }
       } catch (error) {
-        console.error('Error fetching title versions:', error);
+        console.error("Error fetching title versions:", error);
         setVersionData(null);
       } finally {
         setVersionLoading(false);
@@ -200,41 +162,25 @@ export default function TitlesPage() {
     }
   };
 
-  //
-  // Toggle XML expansion for a version row
-  //
-  const toggleXml = async (
-    versionKey: string,
-    date: string,
-    title: string,
-    section: string
-  ) => {
-    // Flip the expansion state
+  const toggleXml = async (versionKey: string, date: string, title: string, section: string) => {
     setExpandedXml((prev) => {
       const current = prev[versionKey];
       if (current && current.expanded) {
-        // Collapse if expanded
         return { ...prev, [versionKey]: { ...current, expanded: false } };
       } else {
-        // Expand, mark loading if no data yet
-        return {
-          ...prev,
-          [versionKey]: { xml: '', loading: true, expanded: true },
-        };
+        return { ...prev, [versionKey]: { xml: "", loading: true, expanded: true } };
       }
     });
 
-    // If we already have data and are re-expanding, don't refetch
     if (expandedXml[versionKey] && expandedXml[versionKey].xml) {
       return;
     }
 
     try {
-      const res = await fetch(
-        `/api/titles/section?date=${encodeURIComponent(date)}&title=${encodeURIComponent(
-          title
-        )}&section=${encodeURIComponent(section)}`
-      );
+      // Fix URL encoding to properly handle '§' symbol
+      const url = `/api/titles/section?date=${encodeURIComponent(date)}&title=${encodeURIComponent(title)}&section=${encodeURIComponent(section)}`;
+      console.log("Fetching XML with URL:", url); // Debug log
+      const res = await fetch(url);
       if (!res.ok) {
         const errorText = `Error loading XML: ${res.status}`;
         setExpandedXml((prev) => ({
@@ -251,36 +197,20 @@ export default function TitlesPage() {
     } catch (error) {
       setExpandedXml((prev) => ({
         ...prev,
-        [versionKey]: {
-          xml: 'Error loading XML',
-          loading: false,
-          expanded: true,
-        },
+        [versionKey]: { xml: "Error loading XML", loading: false, expanded: true },
       }));
     }
   };
 
-  //
-  // Toggle expansion for the "Structure Metadata" column
-  //
   const toggleStructure = async (titleNumber: number, date: string) => {
-    // Flip current expansion
     const isExpanding = !expandedStructure[titleNumber];
-    setExpandedStructure((prev) => ({
-      ...prev,
-      [titleNumber]: isExpanding,
-    }));
+    setExpandedStructure((prev) => ({ ...prev, [titleNumber]: isExpanding }));
 
-    // If expanding and no data fetched yet, fetch from /api/structure
     if (isExpanding && !structureData[titleNumber]) {
       try {
         const res = await fetch(`/api/structure?date=${date}&title=${titleNumber}`);
         const json = await res.json();
-
-        setStructureData((prev) => ({
-          ...prev,
-          [titleNumber]: json, // store entire response
-        }));
+        setStructureData((prev) => ({ ...prev, [titleNumber]: json }));
       } catch (error) {
         setStructureData((prev) => ({
           ...prev,
@@ -290,9 +220,6 @@ export default function TitlesPage() {
     }
   };
 
-  //
-  // Toggle expansion for Ancestry (within the Version details table)
-  //
   const toggleAncestry = async (
     versionKey: string,
     date: string,
@@ -302,23 +229,16 @@ export default function TitlesPage() {
     setExpandedAncestry((prev) => {
       const current = prev[versionKey];
       if (current && current.expanded) {
-        // Collapse if expanded
         return { ...prev, [versionKey]: { ...current, expanded: false } };
       } else {
-        // Expand, mark loading if no data yet
-        return {
-          ...prev,
-          [versionKey]: { data: null, loading: true, expanded: true },
-        };
+        return { ...prev, [versionKey]: { data: null, loading: true, expanded: true } };
       }
     });
 
-    // If we already have data and are re-expanding, don't refetch
     if (expandedAncestry[versionKey]?.data) {
       return;
     }
 
-    // Fetch from /api/ancestry
     try {
       const res = await fetch(
         `/api/ancestry?date=${encodeURIComponent(date)}&title=${encodeURIComponent(
@@ -341,18 +261,11 @@ export default function TitlesPage() {
     } catch (error) {
       setExpandedAncestry((prev) => ({
         ...prev,
-        [versionKey]: {
-          data: 'Error loading ancestry',
-          loading: false,
-          expanded: true,
-        },
+        [versionKey]: { data: "Error loading ancestry", loading: false, expanded: true },
       }));
     }
   };
 
-  //
-  // Render the UI
-  //
   return (
     <main className={styles.main}>
       <Navigation />
@@ -376,39 +289,38 @@ export default function TitlesPage() {
             </thead>
             <tbody>
               {titles.map((title) => {
-                // Fallback date if needed
-                const dateForStructure = title.latest_issue_date || '2025-02-11';
+                const dateForStructure = title.latest_issue_date || "2025-02-11";
 
                 return (
                   <React.Fragment key={title.number}>
                     <tr>
                       <td>{title.number}</td>
-                      <td>{title.name}</td>
-                      <td>{title.latest_amended_on || 'N/A'}</td>
-                      <td>{title.latest_issue_date || 'N/A'}</td>
-                      <td>{title.up_to_date_as_of || 'N/A'}</td>
-                      <td>{title.reserved ? 'Yes' : 'No'}</td>
-                      {/* Button to expand/collapse version details */}
+                      <td>
+                        {title.name}
+                        <SummaryBot title={`Title ${title.number}: ${title.name}`} />
+                      </td>
+                      <td>{title.latest_amended_on || "N/A"}</td>
+                      <td>{title.latest_issue_date || "N/A"}</td>
+                      <td>{title.up_to_date_as_of || "N/A"}</td>
+                      <td>{title.reserved ? "Yes" : "No"}</td>
                       <td>
                         <button
                           className={styles.expandButton}
                           onClick={() => toggleExpansion(title.number)}
                         >
-                          {expandedTitle === title.number ? '-' : '+'}
+                          {expandedTitle === title.number ? "-" : "+"}
                         </button>
                       </td>
-                      {/* Button to expand/collapse structure metadata */}
                       <td>
                         <button
                           className={styles.expandButton}
                           onClick={() => toggleStructure(title.number, dateForStructure)}
                         >
-                          {expandedStructure[title.number] ? '-' : '+'}
+                          {expandedStructure[title.number] ? "-" : "+"}
                         </button>
                       </td>
                     </tr>
 
-                    {/* Expanded row for "Structure Metadata" */}
                     {expandedStructure[title.number] && (
                       <tr>
                         <td colSpan={8} className={styles.expandedRow}>
@@ -417,8 +329,7 @@ export default function TitlesPage() {
                               <StructureViewer node={structureData[title.number].data} />
                             ) : (
                               <p>
-                                {structureData[title.number].error ||
-                                  'Error loading structure data.'}
+                                {structureData[title.number].error || "Error loading structure data."}
                               </p>
                             )
                           ) : (
@@ -428,7 +339,6 @@ export default function TitlesPage() {
                       </tr>
                     )}
 
-                    {/* Expanded row for Title Version details */}
                     {expandedTitle === title.number && (
                       <tr>
                         <td colSpan={8} className={styles.expandedRow}>
@@ -457,7 +367,15 @@ export default function TitlesPage() {
                                   return (
                                     <React.Fragment key={versionKey}>
                                       <tr>
-                                        <td>{version.identifier}</td>
+                                        <td>
+                                          {version.identifier}
+                                          <SummaryBot
+                                            title={version.name}
+                                            identifier={version.identifier}
+                                            date={version.date}
+                                            content={xmlState?.xml}
+                                          />
+                                        </td>
                                         <td>{version.name}</td>
                                         <td>{version.part}</td>
                                         <td>{version.type}</td>
@@ -475,10 +393,9 @@ export default function TitlesPage() {
                                               )
                                             }
                                           >
-                                            {xmlState && xmlState.expanded ? '-' : '+'}
+                                            {xmlState && xmlState.expanded ? "-" : "+"}
                                           </button>
                                         </td>
-                                        {/* New "Ancestry" column button */}
                                         <td>
                                           <button
                                             className={styles.expandButton}
@@ -491,12 +408,11 @@ export default function TitlesPage() {
                                               )
                                             }
                                           >
-                                            {ancestryState && ancestryState.expanded ? '-' : '+'}
+                                            {ancestryState && ancestryState.expanded ? "-" : "+"}
                                           </button>
                                         </td>
                                       </tr>
 
-                                      {/* Expanded row for XML */}
                                       {xmlState && xmlState.expanded && (
                                         <tr>
                                           <td colSpan={8} className={styles.xmlRow}>
@@ -509,19 +425,15 @@ export default function TitlesPage() {
                                         </tr>
                                       )}
 
-                                      {/* Expanded row for Ancestry */}
                                       {ancestryState && ancestryState.expanded && (
                                         <tr>
                                           <td colSpan={8} className={styles.xmlRow}>
                                             {ancestryState.loading ? (
                                               <p>Loading ancestry data...</p>
-                                            ) : typeof ancestryState.data === 'string' ? (
-                                              // Possibly an error string
+                                            ) : typeof ancestryState.data === "string" ? (
                                               <p>{ancestryState.data}</p>
                                             ) : ancestryState.data?.success ? (
-                                              <pre>
-                                                {JSON.stringify(ancestryState.data, null, 2)}
-                                              </pre>
+                                              <pre>{JSON.stringify(ancestryState.data, null, 2)}</pre>
                                             ) : (
                                               <p>Error or no data found.</p>
                                             )}

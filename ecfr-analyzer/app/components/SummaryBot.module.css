@@ -1,0 +1,148 @@
+.container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .infoButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #2196F3;
+    transition: color 0.3s ease;
+  }
+  
+  .infoButton:hover {
+    color: #0d47a1;
+  }
+  
+  .popup {
+    position: absolute;
+    top: 150%;
+    left: auto;
+    right: -500px;
+    transform: none;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 1rem;
+    width: 500px;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    color: #333;
+    font-size: 1rem;
+    /* Add relative positioning for absolute close button */
+    position: relative;
+  }
+  
+  .popup::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    right: 50px;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid #ccc;
+  }
+  
+  .popup::after {
+    content: "";
+    position: absolute;
+    top: -9px;
+    right: 50px;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid #fff;
+  }
+  
+  .popup h4 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+    color: #333;
+  }
+  
+  .popup p {
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+  }
+  
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+  }
+  
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #ccc;
+    border-top: 3px solid #0d47a1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 0.5rem;
+  }
+  
+  .error {
+    color: #d32f2f;
+  }
+  
+  .closeButton {
+    padding: 0.5rem 1rem;
+    border: 1px solid #0d47a1;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #0d47a1;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    display: block;
+    margin-top: 0.5rem;
+  }
+  
+  .closeButton:hover {
+    background-color: #0d47a1;
+    color: #fff;
+  }
+  
+  .closeIcon {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+  }
+  
+  .closeIcon:hover {
+    color: #d32f2f; /* Red on hover for emphasis */
+  }
+  
+  .popup::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .popup::-webkit-scrollbar-track {
+    background: #f2f2f2;
+    border-radius: 4px;
+  }
+  
+  .popup::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+  
+  .popup::-webkit-scrollbar-thumb:hover {
+    background: #0d47a1;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
